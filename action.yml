@@ -61,21 +61,34 @@ runs:
     if: inputs.verbose == 'false'
     shell: bash
     run: |
-      docker run --platform linux/amd64 --rm -t --name slcore -e SHIFTLEFT_ACCESS_TOKEN="$SHIFTLEFT_ACCESS_TOKEN" -v $PWD:/app -v /tmp:/tmp enjoyelan/slcoresarif:latest sl analyze --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --structured-output --structured-output-format JSON --structured-output-file-path /app/structuredOutput.json /app
+      docker run --platform linux/amd64 --rm -t --name slcore -e SHIFTLEFT_ACCESS_TOKEN="$SHIFTLEFT_ACCESS_TOKEN" -v $PWD:/app -v /tmp:/tmp enjoyelan/slcoresarif:latest sl analyze --wait --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --structured-output --structured-output-format JSON --structured-output-file-path /app/structuredOutput.json /app
     env:
       SHIFTLEFT_API_HOST: www.shiftleft.io
       SHIFTLEFT_GRPC_TELEMETRY_HOST: telemetry.shiftleft.io:443
       SHIFTLEFT_GRPC_API_HOST: api.shiftleft.io:443      
       
+  # - name: Generate Sarif Report
+  #   if: inputs.importGitHub == 'true'
+  #   shell: bash
+  #   run: |
+  #     python3 tools/shiftleft-utils/export.py --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --format "sarif" --report_file qwiet-sarif-report.sarif
+
   - name: Generate Sarif Report
     if: inputs.importGitHub == 'true'
     shell: bash
     run: |
-      python3 tools/shiftleft-utils/export.py --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --format "sarif" --report_file qwiet-sarif-report.sarif
+      docker run --platform linux/amd64 --rm -t --name slcore -e SHIFTLEFT_ACCESS_TOKEN="$SHIFTLEFT_ACCESS_TOKEN" -v $PWD:/app -v /tmp:/tmp shiftleft/core:latest sl sarif export --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --report-file ./sarif.json      
       
   - name: Export Sarif Report to GitHub Code Scanning
     if: inputs.importGitHub == 'true'
     uses: github/codeql-action/upload-sarif@v3
     with:
-      sarif_file: qwiet-sarif-report-${{ github.repository_owner }}-${{ github.event.repository.name }}.sarif
+      sarif_file: sarif.json
       category: qwiet-prezero-findings
+
+  # - name: Export Sarif Report to GitHub Code Scanning
+  #   if: inputs.importGitHub == 'true'
+  #   uses: github/codeql-action/upload-sarif@v3
+  #   with:
+  #     sarif_file: qwiet-sarif-report-${{ github.repository_owner }}-${{ github.event.repository.name }}.sarif
+  #     category: qwiet-prezero-findings      
