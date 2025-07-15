@@ -55,7 +55,7 @@ runs:
     if: inputs.importGitHub == 'true'
     shell: bash
     run: |
-      echo "SHIFTLEFT_WAIT=true" >> $GITHUB_ENV
+      echo "SHIFTLEFT_WAIT='true'" >> $GITHUB_ENV
 
   - uses: actions/checkout@v4
 
