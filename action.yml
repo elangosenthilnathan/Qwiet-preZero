@@ -1,0 +1,101 @@
+name: "Qwiet preZero"
+description: "Perform a Qwiet preZero Scan of your GitHub Workspace"
+author: "Qwiet AI"
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  shiftleft-access-token: 
+    description: 'Qwiet preZero Authentication Token'
+    required: true
+  excludeRegex:
+    description: 'Regex to exclude path'
+    default: ".*(test|Readme).*$"
+    required: false
+  importGitHub:
+    description: "Enable SARIF report generation and upload (true/false)"
+    required: false
+    default: "false"    
+  verbose:
+    description: "Enable Verbose logging"
+    required: false
+    default: "false"  
+  strict:
+    description: 'Enable strict mode'
+    default: "false"
+    required: false    
+  wait:
+    description: 'Enable Synchronous mode'
+    default: "false"
+    required: false       
+       
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+runs:
+  using: "composite"
+  steps:
+  - name: Validate if token available
+    if: inputs.shiftleft-access-token == ''
+    shell: bash
+    run: |
+      echo "Qwiet Access Token is mandatory to use this action. Visit https://docs.shiftleft.io/sast/getting-started/overview for details."  
+      exit 1
+
+  - name: Validate if token available
+    if: inputs.shiftleft-access-token != ''
+    shell: bash
+    run: |
+      echo "SHIFTLEFT_ACCESS_TOKEN=${{ inputs.shiftleft-access-token }}" >> $GITHUB_ENV
+
+  - uses: actions/checkout@v4
+
+  - name: Check OS and Install Relevant Qwiet Binary
+      run: |
+        if [[ "${{ runner.os }}" == "Linux" ]]; then
+          curl https://cdn.shiftleft.io/download/sl > $HOME/sl && chmod a+rx $HOME/sl
+          sudo mv $HOME/sl /usr/local/bin/
+        elif [[ "${{ runner.os }}" == "Windows" ]]; then
+          Invoke-WebRequest -Uri 'https://cdn.shiftleft.io/download/sl-latest-windows-x64.zip' -UseBasicParsing -OutFile sl-latest-windows-x64.zip
+          Expand-Archive -Path sl-latest-windows-x64.zip -DestinationPath .
+          $env:Path = $env:Path + ";.\sl" +  ";." 
+        else
+          echo "Unsupported OS: ${{ runner.os }}"
+          exit 1
+        fi  
+
+  - name: preZero Static Analysis
+    if: inputs.verbose == 'true'
+    shell: bash
+    run: |
+      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ inputs.wait }} sl analyze --verbose --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude ${{ inputs.excludeRegex }} 
+    env:
+      SHIFTLEFT_API_HOST: www.shiftleft.io
+      SHIFTLEFT_GRPC_TELEMETRY_HOST: telemetry.shiftleft.io:443
+      SHIFTLEFT_GRPC_API_HOST: api.shiftleft.io:443
+
+  - name: preZero Static Analysis
+    if: inputs.verbose == 'false'
+    shell: bash
+    run: |
+      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ inputs.wait }} sl analyze --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude ${{ inputs.excludeRegex }} 
+    env:
+      SHIFTLEFT_API_HOST: www.shiftleft.io
+      SHIFTLEFT_GRPC_TELEMETRY_HOST: telemetry.shiftleft.io:443
+      SHIFTLEFT_GRPC_API_HOST: api.shiftleft.io:443      
+      
+  - name: Generate Sarif Report
+    if: inputs.importGitHub == 'true'
+    shell: bash
+    run: |
+      sl sarif export --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --report-file sarif.json      
+      
+  - name: Export Sarif Report to GitHub Code Scanning
+    if: inputs.importGitHub == 'true'
+    uses: github/codeql-action/upload-sarif@v3
+    with:
+      sarif_file: sarif.json
+      category: qwiet-prezero-findings    
