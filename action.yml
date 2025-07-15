@@ -81,7 +81,7 @@ runs:
     if: inputs.verbose == 'true'
     shell: bash
     run: |
-      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${SHIFTLEFT_WAIT_FLAG} sl analyze --verbose --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
+      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT="${SHIFTLEFT_WAIT_FLAG}" sl analyze --verbose --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
     env:
       SHIFTLEFT_API_HOST: www.shiftleft.io
       SHIFTLEFT_GRPC_TELEMETRY_HOST: telemetry.shiftleft.io:443
@@ -91,7 +91,7 @@ runs:
     if: inputs.verbose == 'false'
     shell: bash
     run: |
-      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${SHIFTLEFT_WAIT_FLAG} sl analyze --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
+      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT="${SHIFTLEFT_WAIT_FLAG}" sl analyze --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
     env:
       SHIFTLEFT_API_HOST: www.shiftleft.io
       SHIFTLEFT_GRPC_TELEMETRY_HOST: telemetry.shiftleft.io:443
