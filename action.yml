@@ -61,6 +61,7 @@ runs:
   - name: Set Timeout flag
     shell: bash
     run: |
+      echo "SHIFTLEFT_WAIT_FLAG=false" >> $GITHUB_ENV
       if [ "${{ inputs.timeout }}" != '' ]; then
         echo "SHIFTLEFT_ANALYSIS_TIMEOUT=${{ inputs.timeout }}" >> $GITHUB_ENV
       else
@@ -71,15 +72,8 @@ runs:
     if: inputs.importGitHub == 'true' || inputs.wait == 'true'
     shell: bash
     run: |
-      if [ "${{ inputs.importGitHub }}" == 'true' || "${{ inputs.wait }}" == 'true' ]; then
-        echo "Setting wait to true"
-        echo "SHIFTLEFT_WAIT_FLAG=true" >> $GITHUB_ENV
-      else
-        echo "Setting wait to false"
-        echo "SHIFTLEFT_WAIT_FLAG=false" >> $GITHUB_ENV
-      fi    
-      
-
+      echo "SHIFTLEFT_WAIT_FLAG=true" >> $GITHUB_ENV
+        
   - uses: actions/checkout@v4
 
   - name: Check OS and Install Relevant Qwiet Binary
