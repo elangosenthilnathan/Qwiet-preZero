@@ -61,7 +61,7 @@ runs:
   - name: Set Timeout flag
     shell: bash
     run: |
-      echo "Timeout ${{ inputs.timeout }}"
+      echo "Timeout Value ${{ inputs.timeout }}"
       echo "${{ github.event.inputs.timeout }}"
       if [ "${{ github.event.inputs.timeout }}" != '' ]; then
         echo "SHIFTLEFT_ANALYSIS_TIMEOUT=${{ github.event.inputs.timeout }}" >> $GITHUB_ENV
