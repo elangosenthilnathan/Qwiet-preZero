@@ -58,16 +58,18 @@ runs:
     run: |
       echo "SHIFTLEFT_ACCESS_TOKEN=${{ inputs.shiftleft-access-token }}" >> $GITHUB_ENV
 
-  - name: Set Wait flag
+  - name: Set Timeout flag
     shell: bash
     run: |
+      echo "Timeout ${{ github.event.inputs.timeout }}"
+      echo "${{ github.event.inputs.timeout }}"
       if [ "${{ github.event.inputs.timeout }}" != '' ]; then
         echo "SHIFTLEFT_ANALYSIS_TIMEOUT=${{ github.event.inputs.timeout }}" >> $GITHUB_ENV
       else
         echo "SHIFTLEFT_ANALYSIS_TIMEOUT=15m" >> $GITHUB_ENV
       fi
 
-  - name: Set Timeout flag
+  - name: Set Wait flag
     if: inputs.importGitHub == 'true' || inputs.wait == 'true'
     shell: bash
     run: |
