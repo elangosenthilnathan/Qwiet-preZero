@@ -13,25 +13,29 @@ inputs:
     description: 'Qwiet preZero Authentication Token'
     required: true
   excludeRegex:
-    description: 'Regex to exclude path'
+    description: 'Regex to exclude path. Eg ".*(test|Readme).*$"'
     default: ".*(test|Readme).*$"
     required: false
   importGitHub:
-    description: "Enable SARIF report generation and upload (true/false)"
+    description: "Enable SARIF report generation and upload to GitHub Security. Accepted values: true or false"
     required: false
     default: "false"    
   verbose:
-    description: "Enable Verbose logging"
+    description: "Enable Verbose logging. Accepted values: true or false"
     required: false
     default: "false"  
   strict:
-    description: 'Enable strict mode'
-    default: "false"
+    description: "Enable strict mode. Accepted values: true or false"
     required: false    
-  wait:
-    description: 'Enable Synchronous mode'
     default: "false"
-    required: false       
+  wait:
+    description: "Enable Synchronous mode. Accepted values: true or false"
+    required: false    
+    default: "false" 
+  timeout:
+    description: "Increase timeout for larger repos. Eg 30m. Default is 15m"
+    required: false    
+    default: "15m"    
        
 permissions:
   actions: read
@@ -55,10 +59,24 @@ runs:
       echo "SHIFTLEFT_ACCESS_TOKEN=${{ inputs.shiftleft-access-token }}" >> $GITHUB_ENV
 
   - name: Set Wait flag
+    shell: bash
+    run: |
+      if [ "${{ github.event.inputs.timeout }}" != '' ]; then
+        echo "SHIFTLEFT_ANALYSIS_TIMEOUT=${{ github.event.inputs.timeout }}" >> $GITHUB_ENV
+      else
+        echo "SHIFTLEFT_ANALYSIS_TIMEOUT=15m" >> $GITHUB_ENV
+      fi
+
+  - name: Set Timeout flag
     if: inputs.importGitHub == 'true' || inputs.wait == 'true'
     shell: bash
     run: |
-      echo "SHIFTLEFT_WAIT_FLAG=true" >> $GITHUB_ENV
+      if [ "${{ github.event.inputs.importGitHub }}" == 'true' || "${{ github.event.inputs.wait }}" == 'true' ]; then
+        echo "SHIFTLEFT_WAIT_FLAG=true" >> $GITHUB_ENV
+      else
+        echo "SHIFTLEFT_WAIT_FLAG=false" >> $GITHUB_ENV
+      fi    
+      
 
   - uses: actions/checkout@v4
 
@@ -81,7 +99,7 @@ runs:
     if: inputs.verbose == 'true'
     shell: bash
     run: |
-      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ env.SHIFTLEFT_WAIT_FLAG }} sl analyze --verbose --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
+      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ env.SHIFTLEFT_WAIT_FLAG }} sl analyze --verbose --analysis-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --cpg-generation-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
     env:
       SHIFTLEFT_API_HOST: www.shiftleft.io
       SHIFTLEFT_GRPC_TELEMETRY_HOST: telemetry.shiftleft.io:443
@@ -91,7 +109,7 @@ runs:
     if: inputs.verbose == 'false'
     shell: bash
     run: |
-      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ env.SHIFTLEFT_WAIT_FLAG }} sl analyze --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
+      SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ env.SHIFTLEFT_WAIT_FLAG }} sl analyze --analysis-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --cpg-generation-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
     env:
       SHIFTLEFT_API_HOST: www.shiftleft.io
       SHIFTLEFT_GRPC_TELEMETRY_HOST: telemetry.shiftleft.io:443
