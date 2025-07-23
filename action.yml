@@ -61,10 +61,8 @@ runs:
   - name: Set Timeout flag
     shell: bash
     run: |
-      echo "Timeout Value ${{ inputs.timeout }}"
-      echo "${{ github.event.inputs.timeout }}"
-      if [ "${{ github.event.inputs.timeout }}" != '' ]; then
-        echo "SHIFTLEFT_ANALYSIS_TIMEOUT=${{ github.event.inputs.timeout }}" >> $GITHUB_ENV
+      if [ "${{ inputs.timeout }}" != '' ]; then
+        echo "SHIFTLEFT_ANALYSIS_TIMEOUT=${{ inputs.timeout }}" >> $GITHUB_ENV
       else
         echo "SHIFTLEFT_ANALYSIS_TIMEOUT=15m" >> $GITHUB_ENV
       fi
@@ -73,7 +71,7 @@ runs:
     if: inputs.importGitHub == 'true' || inputs.wait == 'true'
     shell: bash
     run: |
-      if [ "${{ github.event.inputs.importGitHub }}" == 'true' || "${{ github.event.inputs.wait }}" == 'true' ]; then
+      if [ "${{ inputs.importGitHub }}" == 'true' || "${{ inputs.wait }}" == 'true' ]; then
         echo "SHIFTLEFT_WAIT_FLAG=true" >> $GITHUB_ENV
       else
         echo "SHIFTLEFT_WAIT_FLAG=false" >> $GITHUB_ENV
