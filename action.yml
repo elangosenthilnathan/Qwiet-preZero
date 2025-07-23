@@ -72,8 +72,10 @@ runs:
     shell: bash
     run: |
       if [ "${{ inputs.importGitHub }}" == 'true' || "${{ inputs.wait }}" == 'true' ]; then
+        echo "Setting wait to true"
         echo "SHIFTLEFT_WAIT_FLAG=true" >> $GITHUB_ENV
       else
+        echo "Setting wait to false"
         echo "SHIFTLEFT_WAIT_FLAG=false" >> $GITHUB_ENV
       fi    
       
