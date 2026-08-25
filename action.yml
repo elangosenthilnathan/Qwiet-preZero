@@ -12,6 +12,9 @@ inputs:
   shiftleft-access-token: 
     description: 'Qwiet preZero Authentication Token'
     required: true
+  github_token: 
+    description: 'GitHub Authentication Token'
+    required: false    
   excludeRegex:
     description: 'Regex to exclude path. Eg ".*(test|Readme).*$"'
     default: ".*(test|Readme).*$"
@@ -35,7 +38,15 @@ inputs:
   timeout:
     description: "Increase timeout for larger repos. Eg 30m. Default is 15m"
     required: false    
-    default: "15m"    
+    default: "15m"   
+  pr_decoration:
+    description: "Enable PR Decoration. Accepted values: true or false"
+    required: false    
+    default: "false"  
+  pr_validation:
+    description: "Enable PR Validation. Accepted values: true or false"
+    required: false    
+    default: "false"      
     
        
 permissions:
@@ -111,6 +122,24 @@ runs:
       SHIFTLEFT_API_HOST: www.shiftleft.io
       SHIFTLEFT_GRPC_TELEMETRY_HOST: telemetry.shiftleft.io:443
       SHIFTLEFT_GRPC_API_HOST: api.shiftleft.io:443      
+
+  - name: PR Decoration
+    if: ((inputs.pr_decoration == 'true') && (github.event_name == 'pull_request'))
+    shell: bash
+    run: |
+      if [ "${{ inputs.github_token }}" == '' ]; then
+        echo "GitHub Access Token is mandatory to use this action."
+      else
+        sl check-analysis --v2 --multilanguage --verbose --app "${GITHUB_REPOSITORY#*/}" --no-build-rules \
+          --github-pr-number=${{github.event.number}} \
+          --github-pr-user=${{ github.repository_owner }} \
+          --github-pr-repo=${{ github.event.repository.name }} \
+          --github-token=${{ inputs.github_token }}
+        EXIT_CODE=$?
+        if [ "${{ inputs.pr_validation }}" ]; then
+          if $EXIT_CODE != 0; then
+            exit $EXIT_CODE
+      fi    
       
   - name: Generate Sarif Report
     if: inputs.importGitHub == 'true'
