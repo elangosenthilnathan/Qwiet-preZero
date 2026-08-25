@@ -36,6 +36,7 @@ inputs:
     description: "Increase timeout for larger repos. Eg 30m. Default is 15m"
     required: false    
     default: "15m"    
+    
        
 permissions:
   actions: read
@@ -95,7 +96,6 @@ runs:
     if: inputs.verbose == 'true'
     shell: bash
     run: |
-      #SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ env.SHIFTLEFT_WAIT_FLAG }} sl analyze --verbose --analysis-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --cpg-generation-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
       SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ env.SHIFTLEFT_WAIT_FLAG }} sl analyze --verbose --analysis-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --cpg-generation-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --app "${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
     env:
       SHIFTLEFT_API_HOST: www.shiftleft.io
@@ -106,7 +106,6 @@ runs:
     if: inputs.verbose == 'false'
     shell: bash
     run: |
-      #SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ env.SHIFTLEFT_WAIT_FLAG }} sl analyze --analysis-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --cpg-generation-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
       SHIFTLEFT_STRICT=${{ inputs.strict }} SHIFTLEFT_WAIT=${{ env.SHIFTLEFT_WAIT_FLAG }} sl analyze --analysis-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --cpg-generation-timeout ${{ env.SHIFTLEFT_ANALYSIS_TIMEOUT }} --app "${GITHUB_REPOSITORY#*/}" --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --structured-output --structured-output-format JSON --structured-output-file-path QwietScan.json . -- --exclude-regex "${{ inputs.excludeRegex }}" 
     env:
       SHIFTLEFT_API_HOST: www.shiftleft.io
@@ -117,7 +116,6 @@ runs:
     if: inputs.importGitHub == 'true'
     shell: bash
     run: |
-      #sl sarif export --app "${GITHUB_REPOSITORY_OWNER}-${GITHUB_REPOSITORY#*/}" --report-file sarif.json      
       sl sarif export --app "${GITHUB_REPOSITORY#*/}" --report-file sarif.json      
       
   - name: Export Sarif Report to GitHub Code Scanning
